@@ -9,6 +9,8 @@ namespace TestSolution
     class TestProject
     {
         static void a() { }
+
+        void b() { }
     }
 
 }
