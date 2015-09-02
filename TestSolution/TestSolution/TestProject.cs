@@ -11,6 +11,7 @@ namespace TestSolution
         static void a() { }
 
         void b() { }
+        void c () { }
     }
 
 }
