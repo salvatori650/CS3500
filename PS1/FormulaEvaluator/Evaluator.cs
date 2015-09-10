@@ -36,16 +36,18 @@ namespace FormulaEvaluator
         /// <returns>Integer parsed value.</returns>
         public static int parseToInt(double v)
         {
-            return Convert.ToInt32(v.ToString());
+            return Convert.ToInt32(v);
         }
         /// <summary>
         /// Method to parse string to double.
         /// </summary>
         /// <param name="v">Object from the stack.</param>
         /// <returns>Associated double value.</returns>
-        public static double parseToDouble(object v)
+        public static double parseToDouble(string v)
         {
-            return double.Parse(v.ToString());
+            double value;
+            double.TryParse(v, out value);
+            return value;
         }
         /// <summary>
         /// Print the expression on the screen.
@@ -71,24 +73,23 @@ namespace FormulaEvaluator
 
             exp = Regex.Replace(exp, " ", string.Empty);
             string[] token = Regex.Split(exp,"(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
-            //Console.WriteLine(exp);
-
-            List<string> tokenList = new List<string>(token);
-            tokenList.Remove("");
-            token = tokenList.ToArray();
 
             print(token);
 
             for (int i = 0; i < token.Length; i++)
             {
+                if (token[i] == string.Empty) continue;
                 switch (token[i])
                 {
                     case "*":
                     case "/":
+
                         Operator.Push(token[i]);
                         break;
+
                     case "+":
                     case "-":
+
                         if (hasOnTop(Operator, "+", "-"))
                         {
                             double valueA;
@@ -105,15 +106,9 @@ namespace FormulaEvaluator
                             }
 
                             if (Operator.Pop().Equals("+"))
-                            {
-                                //Console.Write("\n" + (valueA + valueB));
                                 Value.Push(valueA + valueB);
-                            }
                             else
-                            {
-                                //Console.Write("\n" + (valueA - valueB));
                                 Value.Push(valueA - valueB);
-                            }
                             Operator.Push(token[i]);
                         }
                         else
@@ -121,10 +116,14 @@ namespace FormulaEvaluator
                             Operator.Push(token[i]);
                         }
                         break;
+
                     case "(":
-                        Operator.Push(token[i].ToString());
+
+                        Operator.Push(token[i]);
                         break;
+
                     case ")":
+
                         if (hasOnTop(Operator, "+", "-"))
                         {
                             double valueA;
@@ -141,24 +140,18 @@ namespace FormulaEvaluator
                             }
 
                             if (Operator.Pop().Equals("+"))
-                            {
-                                //Console.Write("\n" + (valueA + valueB));
                                 Value.Push(valueA + valueB);
-                            }
                             else
-                            {
-                                //Console.Write("\n" + (valueA - valueB));
                                 Value.Push(valueA - valueB);
-                            }
 
-                            try
-                            {
-                                Operator.Pop();
-                            }
-                            catch
-                            {
-                                throw new ArgumentException("Initial parentesis not found!");
-                            }
+                        }
+                        try
+                        {
+                            Operator.Pop();
+                        }
+                        catch
+                        {
+                            throw new ArgumentException("Initial parentesis not found!");
                         }
                         if (hasOnTop(Operator, "*", "/"))
                         {
@@ -176,51 +169,48 @@ namespace FormulaEvaluator
                             }
 
                             if (Operator.Pop().Equals("*"))
-                            {
-                                //Console.Write("\n" + (valueA * valueB));
                                 Value.Push(valueA * valueB);
-                            }
                             else
-                            {
-                                //Console.Write("\n" + (valueA / valueB));
                                 Value.Push(valueA / valueB);
-                            }
                         }
                         break;
+
                     default:
-                        if (Regex.IsMatch(token[i], "^[0-9]$")) // if token is an integer
+
+                        if (Regex.IsMatch(token[i], "^[0-9]*$")) // if token is an integer
                             if (hasOnTop(Operator, "*", "/"))
                                 if (Operator.Pop().Equals("*"))
                                 {
                                     double valueA = Value.Pop();
-                                    //Console.Write("\n" + (valueA * parseToDouble(token[i])));
-                                    Value.Push(valueA * parseToDouble(token[i]));
+                                    double valueB = parseToDouble(token[i]);
+                                    Value.Push(valueA * valueB);
                                 }
                                 else
                                 {
                                     double valueA;
+                                    double valueB = parseToDouble(token[i]);
 
                                     try
                                     {
-                                         valueA = Value.Pop();
+                                        valueA = Value.Pop();
                                     }
                                     catch
                                     {
                                         throw new ArgumentException("No value on the stack!");
                                     }
-
-                                    //Console.Write("\n" + (valueA / parseToDouble(token[i])));
-                                    Value.Push(valueA / parseToDouble(token[i]));
+                                    
+                                    Value.Push(valueA / valueB);
                                 }
                             else
+                            {
                                 Value.Push(parseToDouble(token[i]));
+                            }
                         else
-                            if (Regex.IsMatch(token[i], "^[a-z]$")) // if token is a variable
+                            if (Regex.IsMatch(token[i], "^[a-zA-Z]*[0-9]+$")) // if token is a variable
                                 if (hasOnTop(Operator, "*", "/"))
                                     if (Operator.Pop().Equals("*"))
                                     {
                                         double valueA = Value.Pop();
-                                        //Console.Write("\n" + (valueA * var(token[i])));
                                         Value.Push(valueA * var(token[i]));
                                     }
                                     else
@@ -237,7 +227,8 @@ namespace FormulaEvaluator
                                         Value.Push(valueA / var(token[i]));
                                     }
                                 else
-                                    Value.Push(parseToDouble(token[i]));
+                                    Value.Push(var(token[i]));
+                                   
                         break;
                 }
             }
@@ -261,15 +252,9 @@ namespace FormulaEvaluator
                 double valueA = Value.Pop();
 
                 if (Operator.Pop().Equals("+"))
-                {
-                    //Console.Write("\n" + (valueA + valueB));
                     Value.Push(valueA + valueB);
-                }
                 else
-                {
-                    //Console.Write("\n" + (valueA - valueB));
                     Value.Push(valueA - valueB);
-                }
             }
 
             return parseToInt(Value.Pop());

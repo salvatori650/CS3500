@@ -15,7 +15,7 @@ namespace TestProgram
             {
                 var values = new Dictionary<string, int>
                 {
-                    {"a2", 24}
+                    {"d3", 10}, {"e5" , 5 }
                 };
                 if (!values.ContainsKey(var))
                     throw new ArgumentException("Variable has no value!");
@@ -23,7 +23,7 @@ namespace TestProgram
             }
             static void Main(string[] args)
             {
-                Console.Write("\n\nResult: " + Evaluator.Evaluate("(9/3*1-1)*(2-1+1+1)", null));
+                Console.Write("\n\nResult: " + Evaluator.Evaluate("(d3/e5)", Lookup));
                 Console.Read();
             }
         }
