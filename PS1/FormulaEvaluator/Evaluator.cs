@@ -1,211 +1,278 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-
-// need to work on exceptions
 
 namespace FormulaEvaluator
 {   /// <summary>
-    /// 
+    /// Class that contains a method to evaluates arithmetic expressions written using standard infix notation.
     /// </summary>
     public static class Evaluator
     {
         /// <summary>
-        /// 
+        /// Method to look up a provided variable.
         /// </summary>
-        /// <param name="v"></param>
-        /// <returns></returns>
+        /// <param name="v">Variable to be looked up.</param>
+        /// <returns>An integer value that corresponds to the variable.</returns>
         public delegate int Lookup(string v);
         /// <summary>
-        /// 
+        /// Method to check what operator is on top of the stack.
         /// </summary>
-        /// <param name="stack"></param>
-        /// <param name="op"></param>
-        /// <returns></returns>
-        public static bool hasOnTop(Stack stack, string op)
+        /// <param name="stack">Stack I am looking at.</param>
+        /// <param name="op1">First operator I am looking for.</param>
+        /// <param name="op2">Second operator I am looking for.</param>
+        /// <returns>True if does match. False if doesn't.</returns>
+        public static bool hasOnTop(this Stack<string> stack, string op1, string op2)
         {
             if (stack.Count > 0)
-            {
-                if (stack.Peek().Equals(op))
-                {
-                    return true;
-                }
-                else
-                    return false;
-            }
+                return ((stack.Peek().Equals(op1)) || (stack.Peek().Equals(op2)));
             else
                 return false;
         }
         /// <summary>
-        /// 
+        /// Method to parse double to integer.
         /// </summary>
-        /// <param name="v"></param>
-        /// <returns></returns>
-        public static int parseToInt(object v)
+        /// <param name="v">Value to be parsed.</param>
+        /// <returns>Integer parsed value.</returns>
+        public static int parseToInt(double v)
         {
-            return int.Parse(v.ToString());
+            return Convert.ToInt32(v.ToString());
         }
         /// <summary>
-        /// 
+        /// Method to parse string to double.
         /// </summary>
-        /// <param name="v"></param>
-        /// <returns></returns>
+        /// <param name="v">Object from the stack.</param>
+        /// <returns>Associated double value.</returns>
         public static double parseToDouble(object v)
         {
             return double.Parse(v.ToString());
         }
         /// <summary>
-        /// 
+        /// Print the expression on the screen.
         /// </summary>
-        /// <param name="exp"></param>
-        /// <param name="variableEvaluator"></param>
-        /// <returns></returns>
-        public static int Evaluate(string exp, Lookup variableEvaluator)
+        /// <param name="s">Array of substrings.</param>
+        public static void print(string[] s)
         {
-            Stack Value = new Stack();
-            Stack Operator = new Stack();
+            for (int i = 0; i < s.Length; i++)
+            {
+                Console.Write(s[i]);
+            }
+        }
+        /// <summary>
+        /// Method that evaluates arithmetic expressions written using standard infix notation.
+        /// </summary>
+        /// <param name="exp">Expression to be evaluated.</param>
+        /// <param name="var">A function used to lookup variable values.</param>
+        /// <returns>Expression result.</returns>
+        public static int Evaluate(string exp, Lookup var)
+        {
+            Stack<double> Value = new Stack<double>();
+            Stack<string> Operator = new Stack<string>();
 
             exp = Regex.Replace(exp, " ", string.Empty);
-            Console.WriteLine(exp + "\n");
+            string[] token = Regex.Split(exp,"(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            //Console.WriteLine(exp);
 
-            string[] token = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            List<string> tokenList = new List<string>(token);
+            tokenList.Remove("");
+            token = tokenList.ToArray();
 
-            for (int i = 0; i <= exp.Length; i++)
+            print(token);
+
+            for (int i = 0; i < token.Length; i++)
             {
                 switch (token[i])
                 {
                     case "*":
                     case "/":
-                        Console.Write(token[i]);
                         Operator.Push(token[i]);
                         break;
                     case "+":
                     case "-":
-                        if ((hasOnTop(Operator, "+")) || (hasOnTop(Operator, "-")))
+                        if (hasOnTop(Operator, "+", "-"))
                         {
-                            int valueA = parseToInt(Value.Pop());
-                            int valueB = parseToInt(Value.Pop());
+                            double valueA;
+                            double valueB;
+
+                            try
+                            {
+                                valueB = Value.Pop();
+                                valueA = Value.Pop();
+                            }
+                            catch
+                            {
+                                throw new ArgumentException("Stack has fewer than two values!");
+                            }
+
                             if (Operator.Pop().Equals("+"))
                             {
-                                Console.Write(valueA + valueB);
+                                //Console.Write("\n" + (valueA + valueB));
                                 Value.Push(valueA + valueB);
                             }
                             else
                             {
-                                Console.Write(valueA - valueB);
+                                //Console.Write("\n" + (valueA - valueB));
                                 Value.Push(valueA - valueB);
                             }
                             Operator.Push(token[i]);
                         }
                         else
                         {
-                            Console.Write(token[i]);
                             Operator.Push(token[i]);
                         }
                         break;
                     case "(":
-                        Console.Write(token[i]);
-                        Operator.Push(token[i]);
+                        Operator.Push(token[i].ToString());
                         break;
                     case ")":
-                        if ((hasOnTop(Operator, "+")) || (hasOnTop(Operator, "-")))
+                        if (hasOnTop(Operator, "+", "-"))
                         {
-                            int valueA = parseToInt(Value.Pop());
-                            int valueB = parseToInt(Value.Pop());
+                            double valueA;
+                            double valueB;
+
+                            try
                             {
-                                if (Operator.Pop().Equals("+"))
-                                {
-                                    Console.Write(valueA + valueB);
-                                    Value.Push(valueA + valueB);
-                                }
-                                else
-                                {
-                                    Console.Write(valueA - valueB);
-                                    Value.Push(valueA - valueB);
-                                }
+                                valueB = Value.Pop();
+                                valueA = Value.Pop();
+                            }                                
+                            catch
+                            {
+                                throw new ArgumentException("Stack has fewer than two values!");
                             }
-                            Operator.Pop();
+
+                            if (Operator.Pop().Equals("+"))
+                            {
+                                //Console.Write("\n" + (valueA + valueB));
+                                Value.Push(valueA + valueB);
+                            }
+                            else
+                            {
+                                //Console.Write("\n" + (valueA - valueB));
+                                Value.Push(valueA - valueB);
+                            }
+
+                            try
+                            {
+                                Operator.Pop();
+                            }
+                            catch
+                            {
+                                throw new ArgumentException("Initial parentesis not found!");
+                            }
                         }
-                        if ((hasOnTop(Operator, "*")) || (hasOnTop(Operator, "/")))
+                        if (hasOnTop(Operator, "*", "/"))
                         {
-                            double valueA = parseToDouble(Value.Pop());
-                            double valueB = parseToDouble(Value.Pop());
+                            double valueA;
+                            double valueB;
+
+                            try
+                            {
+                                valueB = Value.Pop();
+                                valueA = Value.Pop();
+                            }
+                            catch
+                            {
+                                throw new ArgumentException("Stack has fewer than two values!");
+                            }
+
                             if (Operator.Pop().Equals("*"))
                             {
-                                Console.Write(valueA * valueB);
+                                //Console.Write("\n" + (valueA * valueB));
                                 Value.Push(valueA * valueB);
                             }
                             else
                             {
-                                Console.Write(valueA / valueB);
+                                //Console.Write("\n" + (valueA / valueB));
                                 Value.Push(valueA / valueB);
                             }
                         }
                         break;
                     default:
-                        if (Regex.IsMatch(token[i],@"^\d$")) // if token is an integer
-                        {
-                            if ((hasOnTop(Operator, "*")) || (hasOnTop(Operator, "/")))
+                        if (Regex.IsMatch(token[i], "^[0-9]$")) // if token is an integer
+                            if (hasOnTop(Operator, "*", "/"))
                                 if (Operator.Pop().Equals("*"))
                                 {
-                                    int valueA = parseToInt(Value.Pop());
-                                    Console.Write(parseToInt(token[i]) * valueA);
-                                    Value.Push(parseToInt(token[i]) * valueA);
+                                    double valueA = Value.Pop();
+                                    //Console.Write("\n" + (valueA * parseToDouble(token[i])));
+                                    Value.Push(valueA * parseToDouble(token[i]));
                                 }
                                 else
                                 {
-                                    int valueA = parseToInt(Value.Pop());
-                                    Console.Write(parseToDouble(token[i]) / valueA);
-                                    Value.Push(parseToDouble(token[i]) / valueA);
+                                    double valueA;
+
+                                    try
+                                    {
+                                         valueA = Value.Pop();
+                                    }
+                                    catch
+                                    {
+                                        throw new ArgumentException("No value on the stack!");
+                                    }
+
+                                    //Console.Write("\n" + (valueA / parseToDouble(token[i])));
+                                    Value.Push(valueA / parseToDouble(token[i]));
                                 }
                             else
-                            {
-                                Console.Write(token[i]);
-                                Value.Push(parseToInt(token[i]));
-                            }
-                        }
+                                Value.Push(parseToDouble(token[i]));
                         else
-                        {
-                            if (Regex.IsMatch(token[i], @"^\s$")) // if token is a variable
-                                if ((hasOnTop(Operator, "*")) || (hasOnTop(Operator, "/")))
-                                    if (Operator.Pop().Equals("+"))
-                                        Value.Push(variableEvaluator(token[i]) * parseToInt(Value.Pop()));
+                            if (Regex.IsMatch(token[i], "^[a-z]$")) // if token is a variable
+                                if (hasOnTop(Operator, "*", "/"))
+                                    if (Operator.Pop().Equals("*"))
+                                    {
+                                        double valueA = Value.Pop();
+                                        //Console.Write("\n" + (valueA * var(token[i])));
+                                        Value.Push(valueA * var(token[i]));
+                                    }
                                     else
-                                        Value.Push(variableEvaluator(token[i]) / parseToInt(Value.Pop()));
+                                    {
+                                        double valueA;
+                                        try
+                                        {
+                                            valueA = Value.Pop();
+                                        }
+                                        catch
+                                        {
+                                            throw new ArgumentException("No value on the stack!");
+                                        }
+                                        Value.Push(valueA / var(token[i]));
+                                    }
                                 else
-                                    Value.Push(token[i]);
-                        }
+                                    Value.Push(parseToDouble(token[i]));
                         break;
                 }
             }
-
-            int value;
+            
             if (Operator.Count == 0)
             {
-                value = parseToInt(Value.Pop());
-                return value;
+                if (!(Value.Count == 1))
+                    throw new ArgumentException("There is not exactly one value on the value stack!");
+
+                return parseToInt(Value.Pop());
             }
             else
             {
-                int valueA = parseToInt(Value.Pop());
-                int valueB = parseToInt(Value.Pop());
+                if (!(Operator.Count == 1))
+                    throw new ArgumentException("There is not exactly one operator on the operator stack!");
+
+                if (!(Value.Count == 2))
+                    throw new ArgumentException("There is not exactly two values on the value stack!");
+
+                double valueB = Value.Pop();
+                double valueA = Value.Pop();
+
                 if (Operator.Pop().Equals("+"))
                 {
-                    Console.Write("\n" + valueA + valueB);
+                    //Console.Write("\n" + (valueA + valueB));
                     Value.Push(valueA + valueB);
                 }
                 else
                 {
-                    Console.Write("\n" + valueA + valueB);
+                    //Console.Write("\n" + (valueA - valueB));
                     Value.Push(valueA - valueB);
                 }
             }
-            value = parseToInt(Value.Pop());
-            return value;
+
+            return parseToInt(Value.Pop());
         }
     }
 }

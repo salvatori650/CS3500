@@ -9,10 +9,23 @@ namespace TestProgram
 {
     class Program
     {
-        static void Main(string[] args)
+        public static class Tester
         {
-            Console.Write("\nResult: " + Evaluator.Evaluate("5 * 4 /(1   +7) -   2", null));
-            string t = Console.ReadLine();
+            private static int Lookup(string var)
+            {
+                var values = new Dictionary<string, int>
+                {
+                    {"a2", 24}
+                };
+                if (!values.ContainsKey(var))
+                    throw new ArgumentException("Variable has no value!");
+                return values[var];
+            }
+            static void Main(string[] args)
+            {
+                Console.Write("\n\nResult: " + Evaluator.Evaluate("(9/3*1-1)*(2-1+1+1)", null));
+                Console.Read();
+            }
         }
     }
 }
