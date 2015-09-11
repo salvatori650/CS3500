@@ -23,7 +23,7 @@ namespace TestProgram
             }
             static void Main(string[] args)
             {
-                Console.Write("\n\nResult: " + Evaluator.Evaluate("(d3/e5)", Lookup));
+                Console.Write(" = " + Evaluator.Evaluate("(d3-e5)*10/(5+5)", Lookup));
                 Console.Read();
             }
         }
