@@ -171,7 +171,10 @@ namespace FormulaEvaluator
                             if (Operator.Pop().Equals("*"))
                                 Value.Push(valueA * valueB);
                             else
-                                Value.Push(valueA / valueB);
+                                if (valueB != 0)
+                                    Value.Push(valueA / valueB);
+                                else
+                                    throw new ArgumentException("Invalid divisor!");
                         }
                         break;
 
@@ -198,8 +201,11 @@ namespace FormulaEvaluator
                                     {
                                         throw new ArgumentException("No value on the stack!");
                                     }
-                                    
-                                    Value.Push(valueA / valueB);
+
+                                    if (valueB != 0)
+                                        Value.Push(valueA / valueB);
+                                    else
+                                        throw new ArgumentException("Invalid divisor!");
                                 }
                             else
                             {
@@ -223,9 +229,12 @@ namespace FormulaEvaluator
                                         catch
                                         {
                                             throw new ArgumentException("No value on the stack!");
-                                        }
-                                        Value.Push(valueA / var(token[i]));
                                     }
+                                    if (var(token[i]) != 0)
+                                        Value.Push(valueA / var(token[i]));
+                                    else
+                                        throw new ArgumentException("Invalid divisor!");
+                                }
                                 else
                                     Value.Push(var(token[i]));
                                    
